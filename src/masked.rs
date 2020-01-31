@@ -107,7 +107,7 @@ impl Not for Ipv4Mask {
 impl FromStr for Ipv4Mask {
     type Err = InvalidIpv4Mask;
     fn from_str(s: &str) -> Result<Self, InvalidIpv4Mask> {
-        let bytes = s.parse::<Ipv4Mask>().map_err(|_| InvalidIpv4Mask)?.octets();
+        let bytes = s.parse::<Ipv4Addr>().map_err(|_| InvalidIpv4Mask)?.octets();
         Self::from_bytes(bytes).ok_or(InvalidIpv4Mask)
     }
 }
