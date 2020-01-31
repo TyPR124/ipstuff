@@ -11,26 +11,14 @@ pub trait IpBitwiseExt<Rhs = Self> {
     fn bitxor(self, rhs: Rhs) -> Self::Output;
 }
 
-pub trait IpBitwiseNotExt<Output = Self> {
-    fn bitnot(self) -> Output;
+pub trait IpBitwiseNotExt {
+    fn bitnot(self) -> Self;
 }
 
-impl IpBitwiseNotExt<Ipv4Addr> for Ipv4Addr {
+impl IpBitwiseNotExt for Ipv4Addr {
     fn bitnot(self) -> Self {
         let bytes = self.octets();
         Self::new(!bytes[0], !bytes[1], !bytes[2], !bytes[3])
-    }
-}
-
-impl IpBitwiseNotExt<[u8; 4]> for Ipv4Addr {
-    fn bitnot(self) -> [u8; 4] {
-        IpBitwiseNotExt::<Ipv4Addr>::bitnot(self).octets()
-    }
-}
-
-impl IpBitwiseNotExt<u32> for Ipv4Addr {
-    fn bitnot(self) -> u32 {
-        !u32::from(self)
     }
 }
 

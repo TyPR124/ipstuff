@@ -46,13 +46,13 @@ impl Ipv4Mask {
     /// Constructs a subnet mask from the provided u32, if it represents a valid mask.
     pub fn from_u32(x: u32) -> Option<Self> {
         let ones = if cfg!(target_feature = "popcnt") {
-            x.count_ones() as u8 // popcnt
+            x.count_ones() as u8 // popcnt;
         } else {
             (!x).leading_zeros() as u8 // not; bsr;
         };
         let zeros = x.trailing_zeros() as u8; // tzcnt / bsf;
+        // add; test; sete;
         if ones + zeros == 32 {
-            // add; test; sete;
             let mask = x.to_be_bytes();
             Some(Self { mask })
         } else {
