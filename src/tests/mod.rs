@@ -1,2 +1,2 @@
 mod ipmask;
-pub use ipmask::*;
+mod ipbitwise;
