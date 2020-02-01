@@ -111,7 +111,7 @@ impl FromStr for Ipv4Mask {
         Self::from_bytes(bytes).ok_or(InvalidIpv4Mask)
     }
 }
-
+#[derive(Debug)]
 pub struct InvalidIpv4Mask;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
@@ -150,7 +150,7 @@ impl MaskedIpv4 {
         let mut parts = s.split(" ");
         let ip = parts.next()?.parse().ok()?;
         let mask = parts.next()?.parse().ok()?;
-        Some(Self::cidr(ip, mask))
+        Some(Self::new(ip, mask))
     }
     /// Returns a String with the IP and mask in CIDR format. Shortcut for `format!("{:#}", self)`
     pub fn to_cidr_string(&self) -> String {
@@ -267,8 +267,10 @@ impl FromStr for MaskedIpv4 {
             .ok_or(InvalidMaskedIpv4)
     }
 }
-
+#[derive(Debug)]
 pub struct InvalidMaskedIpv4;
+
+
 
 // impl FromStr for MaskedIpv4 {
 //     type Err = ();
