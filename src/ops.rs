@@ -5,13 +5,19 @@ use crate::Ipv4Mask;
 /// An extension trait providing bitwise binary operations
 /// for Ipv4Addr and Ipv6Addr types.
 pub trait IpBitwiseExt<Rhs = Self> {
+    /// The output type of this operation.
     type Output;
+    /// Bitwise And operation.
     fn bitand(self, rhs: Rhs) -> Self::Output;
+    /// Bitwise Or operation.
     fn bitor(self, rhs: Rhs) -> Self::Output;
+    /// Bitwise Xor operation.
     fn bitxor(self, rhs: Rhs) -> Self::Output;
 }
-
+/// An extention trait providing bitwise not operation
+/// for Ipv4Addr and Ipv6Addr types.
 pub trait IpBitwiseNotExt {
+    /// Bitwise Not operation.
     fn bitnot(self) -> Self;
 }
 

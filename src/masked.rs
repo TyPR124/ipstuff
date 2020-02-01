@@ -7,6 +7,8 @@ use std::ops::Not;
 
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
+/// A 4-byte type representing a subnet mask. This type can only be a valid subnet mask.
+#[repr(align(4))]
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct Ipv4Mask {
     mask: [u8; 4],
@@ -111,12 +113,16 @@ impl FromStr for Ipv4Mask {
         Self::from_bytes(bytes).ok_or(InvalidIpv4Mask)
     }
 }
+/// Error when failing to parse an Ipv4Mask.
 #[derive(Debug)]
 pub struct InvalidIpv4Mask;
-
+/// An 8-byte type representing an IPv4 address and subnet mask pair. The IP may be any ip
+/// within the represented network, and the mask may be any valid subnet mask.
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct MaskedIpv4 {
+    /// The IP address
     pub ip: Ipv4Addr,
+    /// The subnet mask
     pub mask: Ipv4Mask,
 }
 
@@ -267,6 +273,7 @@ impl FromStr for MaskedIpv4 {
             .ok_or(InvalidMaskedIpv4)
     }
 }
+/// Error when failing to parse a MaskedIpv4.
 #[derive(Debug)]
 pub struct InvalidMaskedIpv4;
 

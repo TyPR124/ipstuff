@@ -1,4 +1,9 @@
+//! # ipstuff
+//! 
+//! Various utilities for working with IP addresses and subnet masks.
+//! 
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 
 mod masked;
 pub use masked::*;
