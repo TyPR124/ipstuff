@@ -122,7 +122,7 @@ pub struct MaskedIpv4 {
 
 impl MaskedIpv4 {
     /// Constructs a MaskedIpv4 from the provided ip and mask.
-    pub fn new(ip: Ipv4Addr, mask: Ipv4Mask) -> Self {
+    pub const fn new(ip: Ipv4Addr, mask: Ipv4Mask) -> Self {
         Self { ip, mask }
     }
     /// Constructs a MaskedIpv4 from the provided ip and mask length.
@@ -130,7 +130,7 @@ impl MaskedIpv4 {
     /// # Panics
     ///
     /// Will panic if provided length > 32
-    pub fn cidr(ip: Ipv4Addr, mask_len: u8) -> Self {
+    pub const fn cidr(ip: Ipv4Addr, mask_len: u8) -> Self {
         let mask = Ipv4Mask::new(mask_len);
         Self::new(ip, mask)
     }
