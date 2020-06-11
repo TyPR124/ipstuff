@@ -1,6 +1,6 @@
 [package]
 name = "ipstuff"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Tyler Ruckinger"]
 edition = "2018"
 

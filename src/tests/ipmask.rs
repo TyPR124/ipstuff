@@ -1,4 +1,5 @@
 use crate::*;
+use std::net::Ipv4Addr;
 
 #[test]
 fn build_and_display_all_v4_masks() {
@@ -77,4 +78,15 @@ fn parse_masked_ipv4_strings() {
     assert_eq!(format!("{:#}", net), "10.0.0.4/12");
     let net: MaskedIpv4 = TEN_FIVE_32.parse().unwrap();
     assert_eq!(format!("{:#}", net), "10.0.0.5/32");
+}
+
+#[test]
+fn masked_ipv4_contains() {
+    const TEN_FOUR_12: &str = "10.0.0.4 255.240.0.0";
+    let net: MaskedIpv4 = TEN_FOUR_12.parse().unwrap();
+    assert!(net.contains(Ipv4Addr::new(10,0,0,0)));
+    assert!(net.contains(Ipv4Addr::new(10,0,0,1)));
+    assert!(net.contains(Ipv4Addr::new(10,1,0,1)));
+    assert!(net.contains(Ipv4Addr::new(10,15,255,255)));
+    assert!(!net.contains(Ipv4Addr::new(10,16,0,0)));
 }

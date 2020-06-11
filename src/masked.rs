@@ -247,6 +247,10 @@ impl MaskedIpv4 {
             2 << borrowed_bits
         }
     }
+    /// Returns true if this network contains the provided IP address, even if the provided IP is the network or broadcast address.
+    pub fn contains(&self, ip: Ipv4Addr) -> bool {
+        self.ip.bitand(self.mask) == ip.bitand(self.mask)
+    }
 }
 
 impl Display for MaskedIpv4 {
