@@ -142,7 +142,7 @@ impl MaskedIpv4 {
     }
     /// Constructs a new MaskedIpv4 from the provided CIDR string.
     pub fn from_cidr_str(s: &str) -> Option<Self> {
-        let mut parts = s.split('/');
+        let mut parts = s.splitn(2, '/');
         let ip = parts.next()?.parse::<Ipv4Addr>().ok()?;
         let mask_len = parts.next()?.parse::<u8>().ok()?;
         if mask_len > 32 {
@@ -153,7 +153,7 @@ impl MaskedIpv4 {
     }
     /// Constructs a new MaskedIpv4 from the provided IP and subnet mask. There should be exactly one space between the IP and mask.
     pub fn from_network_str(s: &str) -> Option<Self> {
-        let mut parts = s.split(' ');
+        let mut parts = s.splitn(2, ' ');
         let ip = parts.next()?.parse().ok()?;
         let mask = parts.next()?.parse().ok()?;
         Some(Self::new(ip, mask))

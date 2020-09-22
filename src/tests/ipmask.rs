@@ -90,3 +90,23 @@ fn masked_ipv4_contains() {
     assert!(net.contains(Ipv4Addr::new(10,15,255,255)));
     assert!(!net.contains(Ipv4Addr::new(10,16,0,0)));
 }
+
+#[test]
+fn invalid_maskedv4_cidr() {
+    assert!(MaskedIpv4::from_cidr_str("192.168.1.1/24/24").is_none());
+    assert!(MaskedIpv4::from_cidr_str("8.8.8./32").is_none());
+    assert!(MaskedIpv4::from_cidr_str("a/32").is_none());
+    assert!(MaskedIpv4::from_cidr_str("192.168.1.1 255.255.255.0").is_none());
+    assert!(MaskedIpv4::from_cidr_str("192.168.1.1/33").is_none());
+    assert!(MaskedIpv4::from_cidr_str("192.256.1.1/32").is_none());
+}
+
+#[test]
+fn invalid_maskedv4_network() {
+    assert!(MaskedIpv4::from_network_str("192.168.1.1255.255.255.255").is_none());
+    assert!(MaskedIpv4::from_network_str("192.168.1.1\t255.255.255.255").is_none());
+    assert!(MaskedIpv4::from_network_str("192.168.1.1  255.255.255.255").is_none());
+    assert!(MaskedIpv4::from_network_str("192.168.1. 1 255.255.255.255").is_none());
+    assert!(MaskedIpv4::from_network_str("192.168.1.1 255.255.255.255 ").is_none());
+    assert!(MaskedIpv4::from_network_str("192.168.1.1 255.255.255").is_none());
+}
