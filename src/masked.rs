@@ -8,7 +8,6 @@ use std::ops::Not;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
 /// A 4-byte type representing a subnet mask in big-endian byte-order. This type can only be a valid subnet mask.
-#[repr(align(4))]
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct Ipv4Mask {
     mask: [u8; 4],
@@ -281,41 +280,3 @@ impl FromStr for MaskedIpv4 {
 /// Error when failing to parse a MaskedIpv4.
 #[derive(Debug)]
 pub struct InvalidMaskedIpv4;
-
-
-
-// impl FromStr for MaskedIpv4 {
-//     type Err = ();
-//     fn from_str(s: &str) -> Result<Self, ()> {
-//         Self::from_cidr_str(s)
-//             .or_else(||Self::from_ip_mask_str(s))
-//             .ok_or(())
-//     }
-// }
-
-// pub fn mask_from_len(len: u8) -> Option<[u8; 4]> {
-//     if len == 0 { return Some([0,0,0,0]) }
-//     // println!("len is {}", len);
-//     let zeroes = 32u8.checked_sub(len)?;
-//     assert!(zeroes < 32);
-//     let x = 0xFFFF_FFFFu32 << zeroes;
-//     Some(x.to_be_bytes())
-// }
-// #[allow(dead_code)] // fix me
-// fn net_addr(ip: Ipv4Addr, mask: [u8; 4]) -> Ipv4Addr {
-//     let bytes = ip.octets();
-//     Ipv4Addr::new(
-//         bytes[0] & mask[0],
-//         bytes[1] & mask[1],
-//         bytes[2] & mask[2],
-//         bytes[3] & mask[3]
-//     )
-// }
-
-// fn validate_mask(mask: [u8; 4]) -> Option<u8> {
-//     let x = u32::from_be_bytes(mask);
-//     match (x.count_zeros(), x.trailing_zeros()) {
-//         (a, b) if a == b => Some(32 - a as u8),
-//         _ => None
-//     }
-// }
