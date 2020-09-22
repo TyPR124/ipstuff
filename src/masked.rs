@@ -7,13 +7,14 @@ use std::ops::Not;
 
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
-/// A 4-byte type representing a subnet mask. This type can only be a valid subnet mask.
+/// A 4-byte type representing a subnet mask in big-endian byte-order. This type can only be a valid subnet mask.
 #[repr(align(4))]
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct Ipv4Mask {
     mask: [u8; 4],
 }
 
+#[allow(clippy::len_without_is_empty)]
 impl Ipv4Mask {
     /// Returns a mask with the specified length.
     ///
@@ -142,7 +143,7 @@ impl MaskedIpv4 {
     }
     /// Constructs a new MaskedIpv4 from the provided CIDR string.
     pub fn from_cidr_str(s: &str) -> Option<Self> {
-        let mut parts = s.split("/");
+        let mut parts = s.split('/');
         let ip = parts.next()?.parse::<Ipv4Addr>().ok()?;
         let mask_len = parts.next()?.parse::<u8>().ok()?;
         if mask_len > 32 {
@@ -151,9 +152,9 @@ impl MaskedIpv4 {
             Some(Self::cidr(ip, mask_len))
         }
     }
-    /// Constructs a new MaskedIpv4 from the provided IP and subnet mask. There must be exactly one space between the IP and mask.
+    /// Constructs a new MaskedIpv4 from the provided IP and subnet mask. There should be exactly one space between the IP and mask.
     pub fn from_network_str(s: &str) -> Option<Self> {
-        let mut parts = s.split(" ");
+        let mut parts = s.split(' ');
         let ip = parts.next()?.parse().ok()?;
         let mask = parts.next()?.parse().ok()?;
         Some(Self::new(ip, mask))
