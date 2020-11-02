@@ -1,6 +1,6 @@
 use crate::IpBitwiseExt;
 
-use std::net::Ipv4Addr;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
 
 use std::ops::Not;
@@ -11,6 +11,11 @@ use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct Ipv4Mask {
     mask: [u8; 4],
+}
+
+#[test]
+fn test_mask_layout() {
+    assert_eq!(Ipv4Mask::new(9), Ipv4Mask::from_bytes([255, 128, 0, 0]).unwrap());
 }
 
 #[allow(clippy::len_without_is_empty)]
