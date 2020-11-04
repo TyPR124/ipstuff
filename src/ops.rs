@@ -24,38 +24,27 @@ pub trait IpBitwiseNotExt {
 impl IpBitwiseNotExt for Ipv4Addr {
     fn bitnot(self) -> Self {
         let bytes = self.octets();
-        Self::new(!bytes[0], !bytes[1], !bytes[2], !bytes[3])
+        let x = !u32::from_ne_bytes(bytes);
+        Self::from(x.to_ne_bytes())
     }
 }
 
 impl IpBitwiseExt<[u8; 4]> for Ipv4Addr {
     type Output = Self;
     fn bitand(self, rhs: [u8; 4]) -> Self {
-        let lhs = self.octets();
-        Ipv4Addr::new(
-            lhs[0] & rhs[0],
-            lhs[1] & rhs[1],
-            lhs[2] & rhs[2],
-            lhs[3] & rhs[3],
-        )
+        let lhs = u32::from_ne_bytes(self.octets());
+        let rhs = u32::from_ne_bytes(rhs);
+        Self::from((lhs & rhs).to_ne_bytes())
     }
     fn bitor(self, rhs: [u8; 4]) -> Self {
-        let lhs = self.octets();
-        Ipv4Addr::new(
-            lhs[0] | rhs[0],
-            lhs[1] | rhs[1],
-            lhs[2] | rhs[2],
-            lhs[3] | rhs[3],
-        )
+        let lhs = u32::from_ne_bytes(self.octets());
+        let rhs = u32::from_ne_bytes(rhs);
+        Self::from((lhs | rhs).to_ne_bytes())
     }
     fn bitxor(self, rhs: [u8; 4]) -> Self {
-        let lhs = self.octets();
-        Ipv4Addr::new(
-            lhs[0] ^ rhs[0],
-            lhs[1] ^ rhs[1],
-            lhs[2] ^ rhs[2],
-            lhs[3] ^ rhs[3],
-        )
+        let lhs = u32::from_ne_bytes(self.octets());
+        let rhs = u32::from_ne_bytes(rhs);
+        Self::from((lhs ^ rhs).to_ne_bytes())
     }
 }
 
