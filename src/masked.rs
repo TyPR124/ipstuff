@@ -73,8 +73,7 @@ impl Ipv4Mask {
     }
     /// Returns the subnet mask as a native-endian u32.
     pub const fn as_u32(self) -> u32 {
-        let bytes = self.octets();
-        (bytes[0] as u32) << 24 | (bytes[1] as u32) << 16 | (bytes[2] as u32) << 8 | bytes[3] as u32
+        u32::from_be_bytes(self.octets())
     }
     /// Returns the length of the mask. That is, the number of 1 bits in this mask.
     pub const fn len(self) -> u8 {
