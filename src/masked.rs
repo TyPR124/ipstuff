@@ -8,6 +8,7 @@ use std::ops::Not;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
 /// A 4-byte type representing a subnet mask in big-endian byte-order. This type can only be a valid subnet mask.
+#[repr(align(4))]
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct Ipv4Mask {
     mask: [u8; 4],
@@ -70,7 +71,7 @@ impl Ipv4Mask {
     pub const fn octets(self) -> [u8; 4] {
         self.mask
     }
-    /// Returns this mask in u32 representation
+    /// Returns the subnet mask as a native-endian u32.
     pub const fn as_u32(self) -> u32 {
         let bytes = self.octets();
         (bytes[0] as u32) << 24 | (bytes[1] as u32) << 16 | (bytes[2] as u32) << 8 | bytes[3] as u32
@@ -132,11 +133,11 @@ pub struct MaskedIpv4 {
 }
 
 impl MaskedIpv4 {
-    /// Constructs a MaskedIpv4 from the provided ip and mask.
+    /// Constructs a MaskedIpv4 from the provided IP and mask.
     pub const fn new(ip: Ipv4Addr, mask: Ipv4Mask) -> Self {
         Self { ip, mask }
     }
-    /// Constructs a MaskedIpv4 from the provided ip and mask length.
+    /// Constructs a MaskedIpv4 from the provided IP and mask length.
     ///
     /// # Panics
     ///
@@ -156,7 +157,7 @@ impl MaskedIpv4 {
             Some(Self::cidr(ip, mask_len))
         }
     }
-    /// Constructs a new MaskedIpv4 from the provided IP and subnet mask. There should be exactly one space between the IP and mask.
+    /// Constructs a new MaskedIpv4 from the provided IP and subnet mask. There must be exactly one space between the IP and mask.
     pub fn from_network_str(s: &str) -> Option<Self> {
         let mut parts = s.splitn(2, ' ');
         let ip = parts.next()?.parse().ok()?;
@@ -226,13 +227,14 @@ impl MaskedIpv4 {
     /// # Panics
     ///
     /// Will panic if the provided length is > 32, or if the number of networks does not fit in usize
-    pub fn network_count(&self, len: u8) -> usize {
-        if len < self.mask.len() {
+    pub fn network_count(&self, new_len: u8) -> usize {
+        let curr_len = self.mask.len();
+        if new_len < curr_len {
             0
-        } else if len > 32 {
+        } else if new_len > 32 {
             panic!("Invalid mask length > 32")
         } else {
-            let borrowed_bits = len - self.mask.len();
+            let borrowed_bits = new_len - curr_len;
             2usize.checked_shl(borrowed_bits as u32).unwrap()
         }
     }
@@ -242,13 +244,14 @@ impl MaskedIpv4 {
     /// # Panics
     ///
     /// Will panic if the provided length is > 32
-    pub fn network_count_u64(&self, len: u8) -> u64 {
-        if len < self.mask.len() {
+    pub fn network_count_u64(&self, new_len: u8) -> u64 {
+        let curr_len = self.mask.len();
+        if new_len < curr_len {
             0
-        } else if len > 32 {
+        } else if new_len > 32 {
             panic!("Invalid mask length > 32")
         } else {
-            let borrowed_bits = len - self.mask.len();
+            let borrowed_bits = new_len - curr_len;
             2 << borrowed_bits
         }
     }
