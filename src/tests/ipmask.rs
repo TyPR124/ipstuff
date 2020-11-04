@@ -15,7 +15,7 @@ fn build_and_display_all_v4_masks() {
         let bytes = mask.octets();
         let x = u32::from_be_bytes(bytes);
         assert_eq!(x.count_ones(), len as u32);
-        assert_eq!(x.trailing_zeros(), 32-len as u32);
+        assert_eq!(x.trailing_zeros(), 32 - len as u32);
         display.clear();
         write!(display, "{}", mask).unwrap();
         assert_eq!(
@@ -62,7 +62,10 @@ fn build_all_v6_masks_from_u128() {
     // Invalid masks
     assert_eq!(None, Ipv6Mask::from_u128(0xFF));
     assert_eq!(None, Ipv6Mask::from_u128(0xA000_0000));
-    assert_eq!(None, Ipv6Mask::from_u128(0xFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_F00F));
+    assert_eq!(
+        None,
+        Ipv6Mask::from_u128(0xFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_F00F)
+    );
 }
 #[test]
 fn parse_v4_mask_strings() {
@@ -192,11 +195,11 @@ fn parse_masked_ipv6_strings() {
 fn masked_ipv4_contains() {
     const TEN_FOUR_12: &str = "10.0.0.4 255.240.0.0";
     let net: MaskedIpv4 = TEN_FOUR_12.parse().unwrap();
-    assert!(net.contains(Ipv4Addr::new(10,0,0,0)));
-    assert!(net.contains(Ipv4Addr::new(10,0,0,1)));
-    assert!(net.contains(Ipv4Addr::new(10,1,0,1)));
-    assert!(net.contains(Ipv4Addr::new(10,15,255,255)));
-    assert!(!net.contains(Ipv4Addr::new(10,16,0,0)));
+    assert!(net.contains(Ipv4Addr::new(10, 0, 0, 0)));
+    assert!(net.contains(Ipv4Addr::new(10, 0, 0, 1)));
+    assert!(net.contains(Ipv4Addr::new(10, 1, 0, 1)));
+    assert!(net.contains(Ipv4Addr::new(10, 15, 255, 255)));
+    assert!(!net.contains(Ipv4Addr::new(10, 16, 0, 0)));
 }
 #[test]
 fn masked_ipv6_contains() {

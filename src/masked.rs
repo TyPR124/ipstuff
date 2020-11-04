@@ -22,8 +22,14 @@ pub struct Ipv6Mask {
 
 #[test]
 fn test_mask_layout() {
-    assert_eq!(Ipv4Mask::new(9), Ipv4Mask::from_bytes([255, 128, 0, 0]).unwrap());
-    assert_eq!(Ipv6Mask::new(9), Ipv6Mask::from_bytes([255, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).unwrap());
+    assert_eq!(
+        Ipv4Mask::new(9),
+        Ipv4Mask::from_bytes([255, 128, 0, 0]).unwrap()
+    );
+    assert_eq!(
+        Ipv6Mask::new(9),
+        Ipv6Mask::from_bytes([255, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).unwrap()
+    );
 }
 
 #[allow(clippy::len_without_is_empty)]
@@ -66,7 +72,7 @@ impl Ipv4Mask {
             (!x).leading_zeros() as u8 // not; bsr;
         };
         let zeros = x.trailing_zeros() as u8; // tzcnt / bsf;
-        // add; test; sete;
+                                              // add; test; sete;
         if ones + zeros == 32 {
             let mask = x.to_be_bytes();
             Some(Self { mask })
@@ -100,6 +106,7 @@ impl Ipv6Mask {
     ///
     /// Will panic if provided length is > 128
     pub const fn new(len: u8) -> Self {
+        #[rustfmt::skip]
         const MASKS: [u128; 129] = [
 			0x0,
 			0x80000000000000000000000000000000, 0xC0000000000000000000000000000000, 0xE0000000000000000000000000000000, 0xF0000000000000000000000000000000, 0xF8000000000000000000000000000000, 0xFC000000000000000000000000000000, 0xFE000000000000000000000000000000, 0xFF000000000000000000000000000000, 0xFF800000000000000000000000000000, 0xFFC00000000000000000000000000000, 0xFFE00000000000000000000000000000, 0xFFF00000000000000000000000000000, 0xFFF80000000000000000000000000000, 0xFFFC0000000000000000000000000000, 0xFFFE0000000000000000000000000000, 0xFFFF0000000000000000000000000000,
@@ -396,7 +403,7 @@ impl MaskedIpv6 {
         Self { ip, mask }
     }
     /// Constructs a MaskedIpv6 from the provided IP and mask length.
-    /// 
+    ///
     /// # Panics
     ///
     /// Will panic if the provided length > 128
@@ -420,7 +427,7 @@ impl MaskedIpv6 {
         format!("{}", self)
     }
     /// Returns the "network" address by setting all host bits to 0.
-    /// 
+    ///
     /// Note: Ipv6 does not technically have a "network" address, however this method can still
     /// be useful to determine the base address of a network.
     pub fn network_address(&self) -> Ipv6Addr {
@@ -505,23 +512,27 @@ impl FromStr for MaskedIpv4 {
     type Err = InvalidMaskedIpv4;
     fn from_str(s: &str) -> Result<Self, InvalidMaskedIpv4> {
         let mut cidr = false;
-        let split_index = s.find(|ch| {
-            if ch == ' ' {
-                cidr = false;
-                true
-            } else if ch == '/' {
-                cidr = true;
-                true
-            } else {
-                false
-            }
-        }).ok_or(InvalidMaskedIpv4)?;
+        let split_index = s
+            .find(|ch| {
+                if ch == ' ' {
+                    cidr = false;
+                    true
+                } else if ch == '/' {
+                    cidr = true;
+                    true
+                } else {
+                    false
+                }
+            })
+            .ok_or(InvalidMaskedIpv4)?;
         let (ip, mask) = s.split_at(split_index);
         let ip = ip.parse::<Ipv4Addr>().map_err(|_| InvalidMaskedIpv4)?;
         let mask = &mask[1..];
         let mask = if cidr {
             let len = mask.parse::<u8>().map_err(|_| InvalidMaskedIpv4)?;
-            if len > 32 { return Err(InvalidMaskedIpv4) }
+            if len > 32 {
+                return Err(InvalidMaskedIpv4);
+            }
             Ipv4Mask::new(len)
         } else {
             mask.parse::<Ipv4Mask>().map_err(|_| InvalidMaskedIpv4)?
