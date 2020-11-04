@@ -279,9 +279,31 @@ impl Debug for MaskedIpv4 {
 impl FromStr for MaskedIpv4 {
     type Err = InvalidMaskedIpv4;
     fn from_str(s: &str) -> Result<Self, InvalidMaskedIpv4> {
-        Self::from_cidr_str(s)
-            .or_else(|| Self::from_network_str(s))
-            .ok_or(InvalidMaskedIpv4)
+        let mut cidr = false;
+        let split_index = s.find(|ch| {
+            if ch == ' ' {
+                cidr = false;
+                true
+            } else if ch == '/' {
+                cidr = true;
+                true
+            } else {
+                false
+            }
+        }).ok_or(InvalidMaskedIpv4)?;
+        let (ip, mask) = s.split_at(split_index);
+        let ip = ip.parse::<Ipv4Addr>().map_err(|_| InvalidMaskedIpv4)?;
+        let mask = &mask[1..];
+        let mask = if cidr {
+            let len = mask.parse::<u8>().map_err(|_| InvalidMaskedIpv4)?;
+            if len > 32 { return Err(InvalidMaskedIpv4) }
+            Ipv4Mask::new(len)
+        } else {
+            mask.parse::<Ipv4Mask>().map_err(|_| InvalidMaskedIpv4)?
+        };
+        Ok(Self::new(ip, mask))
+    }
+}
     }
 }
 /// Error when failing to parse a MaskedIpv4.
