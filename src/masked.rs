@@ -674,10 +674,11 @@ impl FromStr for MaskedIp {
             })
             .ok_or(InvalidMaskedIp)?;
         let (ip, mask) = s.split_at(first_index + split_index + 1);
+        let mask = &mask[1..];
         if is_v4 {
             let ip = ip.parse().map_err(|_| InvalidMaskedIp)?;
             let mask = if is_cidr {
-                let len = mask[1..].parse::<u8>().map_err(|_| InvalidMaskedIp)?;
+                let len = mask.parse::<u8>().map_err(|_| InvalidMaskedIp)?;
                 if len > 32 {
                     return Err(InvalidMaskedIp);
                 }
