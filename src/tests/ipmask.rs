@@ -237,3 +237,11 @@ fn invalid_maskedv4_network() {
     assert!(MaskedIpv4::from_network_str("192.168.1.1 255.255.255.255 ").is_none());
     assert!(MaskedIpv4::from_network_str("192.168.1.1 255.255.255").is_none());
 }
+#[test]
+fn build_maskedip() {
+    const S: &str = "192.168.1.1/25";
+    assert_eq!(
+        "192.168.1.1/25",
+        S.parse::<MaskedIp>().unwrap().to_cidr_string()
+    );
+}
