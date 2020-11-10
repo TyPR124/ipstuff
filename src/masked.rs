@@ -1,6 +1,6 @@
 use crate::IpBitwiseExt;
 
-use std::net::{Ipv4Addr, Ipv6Addr};
+use std::net::{Ipv4Addr, Ipv6Addr, IpAddr};
 use std::str::FromStr;
 
 use std::ops::Not;
@@ -217,7 +217,6 @@ impl FromStr for Ipv4Mask {
     type Err = InvalidIpv4Mask;
     fn from_str(s: &str) -> Result<Self, InvalidIpv4Mask> {
         if s.starts_with('/') {
-            // let len = &s[1..];
             match s[1..].parse::<u8>() {
                 Ok(len @ 0..=32) => Ok(Ipv4Mask::new(len)),
                 _ => Err(InvalidIpv4Mask),
@@ -266,6 +265,14 @@ pub struct MaskedIpv6 {
     pub ip: Ipv6Addr,
     /// The subnet mask
     pub mask: Ipv6Mask,
+}
+/// An enum which may represent either a V4 or V6 Masked IP Address.
+#[derive(Copy, Clone, Eq, PartialEq, Hash)]
+pub enum MaskedIp {
+    /// A [`MaskedIpv4`]
+    V4(MaskedIpv4),
+    /// A [`MaskedIpv6`]
+    V6(MaskedIpv6),
 }
 
 impl MaskedIpv4 {
@@ -462,7 +469,6 @@ impl MaskedIpv6 {
     /// # Panics
     ///
     /// Will panic if the provided length is > 128, or if the number of networks does not fit in usize
-
     pub fn network_count(&self, new_len: u8) -> u128 {
         let curr_len = self.mask.len();
         if new_len < curr_len {
@@ -477,6 +483,77 @@ impl MaskedIpv6 {
     /// Returns true if this network contains the provided IP address.
     pub fn contains(&self, ip: Ipv6Addr) -> bool {
         self.ip.bitand(self.mask) == ip.bitand(self.mask)
+    }
+}
+
+impl MaskedIp {
+    pub fn from_cidr_str(s: &str) -> Option<Self> {
+        let mut parts = s.splitn(2, '/');
+        let ip = parts.next()?.parse().ok()?;
+        let mask_len = parts.next()?.parse().ok()?;
+        match (ip, mask_len) {
+            (IpAddr::V4(ip), len @ 0..=32) => Some(Self::V4(MaskedIpv4::cidr(ip, len))),
+            (IpAddr::V6(ip), len @ 0..=128) => Some(Self::V6(MaskedIpv6::cidr(ip, len))),
+            _ => None
+        }
+    }
+    pub fn to_cidr_string(&self) -> String {
+        format!("{:#}", self)
+    }
+    pub fn network_address(&self) -> IpAddr {
+        match self {
+            Self::V4(m) => IpAddr::V4(m.network_address()),
+            Self::V6(m) => IpAddr::V6(m.network_address()),
+        }
+    }
+    pub fn network(&self) -> Self {
+        match self {
+            Self::V4(m) => Self::V4(m.network()),
+            Self::V6(m) => Self::V6(m.network())
+        }
+    }
+    pub fn is_network_address(&self) -> bool {
+        match self {
+            Self::V4(m) => m.is_network_address(),
+            Self::V6(m) => m.is_network_address(),
+        }
+    }
+    pub fn is_broadcast_address(&self) -> bool {
+        match self {
+            Self::V4(m) => m.is_broadcast_address(),
+            Self::V6(_) => false
+        }
+    }
+    pub fn network_bits(&self) -> u8 {
+        match self {
+            Self::V4(m) => m.network_bits(),
+            Self::V6(m) => m.network_bits(),
+        }
+    }
+    pub fn host_bits(&self) -> u8 {
+        match self {
+            Self::V4(m) => m.host_bits(),
+            Self::V6(m) => m.host_bits(),
+        }
+    }
+    pub fn host_count(&self) -> u128 {
+        match self {
+            Self::V4(m) => m.host_count_u64() as u128,
+            Self::V6(m) => m.host_count()
+        }
+    }
+    pub fn network_count(&self, len: u8) -> u128 {
+        match self {
+            Self::V4(m) => m.network_count_u64(len) as u128,
+            Self::V6(m) => m.network_count(len)
+        }
+    }
+    pub fn contains(&self, ip: IpAddr) -> bool {
+        match (self, ip) {
+            (Self::V4(m), IpAddr::V4(ip)) => m.contains(ip),
+            (Self::V6(m), IpAddr::V6(ip)) => m.contains(ip),
+            _ => false
+        }
     }
 }
 
@@ -496,6 +573,15 @@ impl Display for MaskedIpv6 {
     }
 }
 
+impl Display for MaskedIp {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        match self {
+            MaskedIp::V4(masked) => Display::fmt(masked, f),
+            MaskedIp::V6(masked) => Display::fmt(masked, f),
+        }
+    }
+}
+
 impl Debug for MaskedIpv4 {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         Display::fmt(self, f)
@@ -503,6 +589,12 @@ impl Debug for MaskedIpv4 {
 }
 
 impl Debug for MaskedIpv6 {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        Display::fmt(self, f)
+    }
+}
+
+impl Debug for MaskedIp {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         Display::fmt(self, f)
     }
@@ -547,9 +639,69 @@ impl FromStr for MaskedIpv6 {
         Self::from_cidr_str(s).ok_or(InvalidMaskedIpv6)
     }
 }
-/// Error when failing to parse a MaskedIpv4.
+
+impl FromStr for MaskedIp {
+    type Err = InvalidMaskedIp;
+    fn from_str(s: &str) -> Result<Self, InvalidMaskedIp> {
+        let mut is_v4 = false;
+        let mut is_cidr = false;
+        let mut first_index = 0;
+        let split_index = s.find(|ch| {
+            match ch {
+                ':' => {
+                    is_v4 = false;
+                    true
+                },
+                '.' => {
+                    is_v4 = true;
+                    true
+                },
+                _ => false
+            }
+        }).and_then(|ind| {
+            first_index = ind;
+            s[ind+1..].find(|ch| {
+                match ch {
+                    '/' => {
+                        is_cidr = true;
+                        true
+                    },
+                    ' ' => {
+                        is_cidr = false;
+                        true
+                    },
+                    _ => false
+                }
+            })
+        }).ok_or(InvalidMaskedIp)?;
+        let (ip, mask) = s.split_at(first_index + split_index);
+        if is_v4 {
+            let ip = ip.parse().map_err(|_| InvalidMaskedIp)?;
+            let mask = if is_cidr {
+                let len = mask.parse::<u8>().map_err(|_| InvalidMaskedIp)?;
+                if len > 32 { return Err(InvalidMaskedIp) }
+                Ipv4Mask::new(len)
+            } else {
+                let mask_bytes = mask.parse::<Ipv4Addr>().map_err(|_| InvalidMaskedIp)?.octets();
+                Ipv4Mask::from_bytes(mask_bytes).ok_or(InvalidMaskedIp)?
+            };
+            Ok(Self::V4(MaskedIpv4 { ip, mask }))
+        } else { // v6
+            if !is_cidr { return Err(InvalidMaskedIp) }
+            let ip = ip.parse().map_err(|_| InvalidMaskedIp)?;
+            let len = mask.parse::<u8>().map_err(|_| InvalidMaskedIp)?;
+            if len > 128 { return Err(InvalidMaskedIp) }
+            let mask = Ipv6Mask::new(len);
+            Ok(Self::V6(MaskedIpv6 { ip, mask }))
+        }
+    }
+}
+/// Error when failing to parse a [`MaskedIpv4`].
 #[derive(Debug)]
 pub struct InvalidMaskedIpv4;
-/// Error when failing to parse a MaskedIpv6.
+/// Error when failing to parse a [`MaskedIpv6`].
 #[derive(Debug)]
 pub struct InvalidMaskedIpv6;
+/// Error when failing to parse a [`MaskedIp`].
+#[derive(Debug)]
+pub struct InvalidMaskedIp;
