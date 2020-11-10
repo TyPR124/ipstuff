@@ -1,6 +1,6 @@
 use crate::IpBitwiseExt;
 
-use std::net::{Ipv4Addr, Ipv6Addr, IpAddr};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
 
 use std::ops::Not;
@@ -494,7 +494,7 @@ impl MaskedIp {
         match (ip, mask_len) {
             (IpAddr::V4(ip), len @ 0..=32) => Some(Self::V4(MaskedIpv4::cidr(ip, len))),
             (IpAddr::V6(ip), len @ 0..=128) => Some(Self::V6(MaskedIpv6::cidr(ip, len))),
-            _ => None
+            _ => None,
         }
     }
     pub fn to_cidr_string(&self) -> String {
@@ -509,7 +509,7 @@ impl MaskedIp {
     pub fn network(&self) -> Self {
         match self {
             Self::V4(m) => Self::V4(m.network()),
-            Self::V6(m) => Self::V6(m.network())
+            Self::V6(m) => Self::V6(m.network()),
         }
     }
     pub fn is_network_address(&self) -> bool {
@@ -521,7 +521,7 @@ impl MaskedIp {
     pub fn is_broadcast_address(&self) -> bool {
         match self {
             Self::V4(m) => m.is_broadcast_address(),
-            Self::V6(_) => false
+            Self::V6(_) => false,
         }
     }
     pub fn network_bits(&self) -> u8 {
@@ -539,20 +539,20 @@ impl MaskedIp {
     pub fn host_count(&self) -> u128 {
         match self {
             Self::V4(m) => m.host_count_u64() as u128,
-            Self::V6(m) => m.host_count()
+            Self::V6(m) => m.host_count(),
         }
     }
     pub fn network_count(&self, len: u8) -> u128 {
         match self {
             Self::V4(m) => m.network_count_u64(len) as u128,
-            Self::V6(m) => m.network_count(len)
+            Self::V6(m) => m.network_count(len),
         }
     }
     pub fn contains(&self, ip: IpAddr) -> bool {
         match (self, ip) {
             (Self::V4(m), IpAddr::V4(ip)) => m.contains(ip),
             (Self::V6(m), IpAddr::V6(ip)) => m.contains(ip),
-            _ => false
+            _ => false,
         }
     }
 }
@@ -646,51 +646,60 @@ impl FromStr for MaskedIp {
         let mut is_v4 = false;
         let mut is_cidr = false;
         let mut first_index = 0;
-        let split_index = s.find(|ch| {
-            match ch {
+        let split_index = s
+            .find(|ch| match ch {
                 ':' => {
                     is_v4 = false;
                     true
-                },
+                }
                 '.' => {
                     is_v4 = true;
                     true
-                },
-                _ => false
-            }
-        }).and_then(|ind| {
-            first_index = ind;
-            s[ind+1..].find(|ch| {
-                match ch {
+                }
+                _ => false,
+            })
+            .and_then(|ind| {
+                first_index = ind;
+                s[ind + 1..].find(|ch| match ch {
                     '/' => {
                         is_cidr = true;
                         true
-                    },
+                    }
                     ' ' => {
                         is_cidr = false;
                         true
-                    },
-                    _ => false
-                }
+                    }
+                    _ => false,
+                })
             })
-        }).ok_or(InvalidMaskedIp)?;
+            .ok_or(InvalidMaskedIp)?;
         let (ip, mask) = s.split_at(first_index + split_index);
         if is_v4 {
             let ip = ip.parse().map_err(|_| InvalidMaskedIp)?;
             let mask = if is_cidr {
                 let len = mask.parse::<u8>().map_err(|_| InvalidMaskedIp)?;
-                if len > 32 { return Err(InvalidMaskedIp) }
+                if len > 32 {
+                    return Err(InvalidMaskedIp);
+                }
                 Ipv4Mask::new(len)
             } else {
-                let mask_bytes = mask.parse::<Ipv4Addr>().map_err(|_| InvalidMaskedIp)?.octets();
+                let mask_bytes = mask
+                    .parse::<Ipv4Addr>()
+                    .map_err(|_| InvalidMaskedIp)?
+                    .octets();
                 Ipv4Mask::from_bytes(mask_bytes).ok_or(InvalidMaskedIp)?
             };
             Ok(Self::V4(MaskedIpv4 { ip, mask }))
-        } else { // v6
-            if !is_cidr { return Err(InvalidMaskedIp) }
+        } else {
+            // v6
+            if !is_cidr {
+                return Err(InvalidMaskedIp);
+            }
             let ip = ip.parse().map_err(|_| InvalidMaskedIp)?;
             let len = mask.parse::<u8>().map_err(|_| InvalidMaskedIp)?;
-            if len > 128 { return Err(InvalidMaskedIp) }
+            if len > 128 {
+                return Err(InvalidMaskedIp);
+            }
             let mask = Ipv6Mask::new(len);
             Ok(Self::V6(MaskedIpv6 { ip, mask }))
         }
