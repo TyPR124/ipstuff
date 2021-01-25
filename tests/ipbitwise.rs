@@ -1,4 +1,4 @@
-use crate::*;
+use ipstuff::*;
 
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
@@ -13,7 +13,7 @@ fn bitand_ipv4() {
         Ipv4Addr::new(0x70, 0, 255, 0)
     );
     assert_eq!(
-        ip.bitand(Ipv4Mask::new(24)),
+        ip.bitand(Ipv4Mask::new(24).unwrap()),
         Ipv4Addr::new(0x77, 0xFF, 0xFF, 0)
     );
 }
@@ -33,7 +33,7 @@ fn bitor_ipv4() {
         Ipv4Addr::new(0xF7, 0xFF, 0x8F, 0x7B)
     );
     assert_eq!(
-        ip.bitor(Ipv4Mask::new(24)),
+        ip.bitor(Ipv4Mask::new(24).unwrap()),
         Ipv4Addr::new(255, 255, 255, 0x33)
     );
 }
@@ -53,7 +53,7 @@ fn bitxor_ipv4() {
         Ipv4Addr::new(0xD7, 0x0F, 0x03, 0x4B)
     );
     assert_eq!(
-        ip.bitxor(Ipv4Mask::new(24)),
+        ip.bitxor(Ipv4Mask::new(24).unwrap()),
         Ipv4Addr::new(0x88, 00, 0x7F, 0x33)
     );
 }
@@ -67,7 +67,7 @@ fn bitnot_ipv4() {
 fn bitand_ipv6() {
     let ip = Ipv6Addr::from_str("F9::1").unwrap();
     assert_eq!(
-        ip.bitand(0xFFFFFFFF_FFFFFFFF_F0000000_00000000),
+        ip.bitand(0xFFFF_FFFF_FFFF_FFFF_F000_0000_0000_0000),
         Ipv6Addr::from_str("F9::").unwrap()
     );
     assert_eq!(
@@ -79,7 +79,7 @@ fn bitand_ipv6() {
         Ipv6Addr::from_str("F9::").unwrap()
     );
     assert_eq!(
-        ip.bitand(Ipv6Mask::new(68)),
+        ip.bitand(Ipv6Mask::new(68).unwrap()),
         Ipv6Addr::from_str("F9::").unwrap()
     );
 }
@@ -88,7 +88,7 @@ fn bitand_ipv6() {
 fn bitor_ipv6() {
     let ip = Ipv6Addr::from_str("F9::1").unwrap();
     assert_eq!(
-        ip.bitor(0xFFFFFFFF_FFFFFFFF_F0000000_00000000),
+        ip.bitor(0xFFFF_FFFF_FFFF_FFFF_F000_0000_0000_0000),
         Ipv6Addr::from_str("FFFF:FFFF:FFFF:FFFF:F000::1").unwrap()
     );
     assert_eq!(
@@ -100,7 +100,7 @@ fn bitor_ipv6() {
         Ipv6Addr::from_str("FFFF:FFFF:FFFF:FFFF:F000::1").unwrap()
     );
     assert_eq!(
-        ip.bitor(Ipv6Mask::new(68)),
+        ip.bitor(Ipv6Mask::new(68).unwrap()),
         Ipv6Addr::from_str("FFFF:FFFF:FFFF:FFFF:F000::1").unwrap()
     );
 }
@@ -109,7 +109,7 @@ fn bitor_ipv6() {
 fn bitxor_ipv6() {
     let ip = Ipv6Addr::from_str("F9::1").unwrap();
     assert_eq!(
-        ip.bitxor(0xFFFFFFFF_FFFFFFFF_F0000000_00000000),
+        ip.bitxor(0xFFFF_FFFF_FFFF_FFFF_F000_0000_0000_0000),
         Ipv6Addr::from_str("FF06:FFFF:FFFF:FFFF:F000::1").unwrap()
     );
     assert_eq!(
@@ -121,7 +121,7 @@ fn bitxor_ipv6() {
         Ipv6Addr::from_str("FF06:FFFF:FFFF:FFFF:F000::1").unwrap()
     );
     assert_eq!(
-        ip.bitxor(Ipv6Mask::new(68)),
+        ip.bitxor(Ipv6Mask::new(68).unwrap()),
         Ipv6Addr::from_str("FF06:FFFF:FFFF:FFFF:F000::1").unwrap()
     );
 }

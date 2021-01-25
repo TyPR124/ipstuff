@@ -1,4 +1,4 @@
-use crate::*;
+use ipstuff::*;
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
 
@@ -7,17 +7,17 @@ fn build_and_display_all_v4_masks() {
     use std::fmt::Write;
     let mut display = String::with_capacity(15);
     for len in 0..=32 {
-        let mask = Ipv4Mask::new(len);
+        let mask = Ipv4Mask::new(len).unwrap();
         assert_eq!(len, mask.len());
         display.clear();
-        write!(display, "{:#}", mask).unwrap();
+        write!(display, "{}", mask).unwrap();
         assert_eq!(display, format!("/{}", len));
         let bytes = mask.octets();
         let x = u32::from_be_bytes(bytes);
         assert_eq!(x.count_ones(), len as u32);
         assert_eq!(x.trailing_zeros(), 32 - len as u32);
         display.clear();
-        write!(display, "{}", mask).unwrap();
+        write!(display, "{:#}", mask).unwrap();
         assert_eq!(
             display,
             format!("{}.{}.{}.{}", bytes[0], bytes[1], bytes[2], bytes[3])
@@ -25,11 +25,36 @@ fn build_and_display_all_v4_masks() {
     }
 }
 #[test]
+fn check_all_unchecked_v4_masks() {
+    for len in 0..=32 {
+        assert_eq!(Ipv4Mask::new(len).unwrap(), Ipv4Mask::new_unchecked(len));
+    }
+    for len in 33..=255 {
+        if cfg!(debug_assertions) {
+            std::panic::catch_unwind(|| Ipv4Mask::new_unchecked(len)).unwrap_err();
+        } else {
+            assert_eq!(Ipv4Mask::new(len), None);
+            let x = Ipv4Mask::new_unchecked(len).octets();
+            let x = u32::from_be_bytes(x);
+            assert_eq!(32, x.count_ones() + x.trailing_zeros());
+        }
+    }
+}
+#[test]
+fn check_all_v4_masks_saturating() {
+    for len in 0..=32 {
+        assert_eq!(Ipv4Mask::new(len).unwrap(), Ipv4Mask::new_saturating(len));
+    }
+    for len in 33..=255 {
+        assert_eq!(Ipv4Mask::new(32).unwrap(), Ipv4Mask::new_saturating(len));
+    }
+}
+#[test]
 fn build_and_display_all_v6_masks() {
     use std::fmt::Write;
     let mut display = String::with_capacity(4);
     for len in 0..=128 {
-        let mask = Ipv6Mask::new(len);
+        let mask = Ipv6Mask::new(len).unwrap();
         assert_eq!(len, mask.len());
         display.clear();
         write!(display, "{}", mask).unwrap();
@@ -82,43 +107,43 @@ fn parse_v4_mask_strings() {
     const SLASH_0_CIDR: &str = "/0";
 
     let m: Ipv4Mask = SLASH_32.parse().unwrap();
-    assert_eq!(format!("{}", m), SLASH_32);
+    assert_eq!(format!("{:#}", m), SLASH_32);
     assert_eq!(m.len(), 32);
     let m: Ipv4Mask = SLASH_30.parse().unwrap();
-    assert_eq!(format!("{}", m), SLASH_30);
+    assert_eq!(format!("{:#}", m), SLASH_30);
     assert_eq!(m.len(), 30);
     let m: Ipv4Mask = SLASH_12.parse().unwrap();
-    assert_eq!(format!("{}", m), SLASH_12);
+    assert_eq!(format!("{:#}", m), SLASH_12);
     assert_eq!(m.len(), 12);
     let m: Ipv4Mask = SLASH_8.parse().unwrap();
-    assert_eq!(format!("{}", m), SLASH_8);
+    assert_eq!(format!("{:#}", m), SLASH_8);
     assert_eq!(m.len(), 8);
     let m: Ipv4Mask = SLASH_0.parse().unwrap();
-    assert_eq!(format!("{}", m), SLASH_0);
+    assert_eq!(format!("{:#}", m), SLASH_0);
     assert_eq!(m.len(), 0);
 
     let m: Ipv4Mask = SLASH_32_CIDR.parse().unwrap();
-    assert_eq!(format!("{:#}", m), SLASH_32_CIDR);
+    assert_eq!(format!("{}", m), SLASH_32_CIDR);
     assert_eq!(m.len(), 32);
     let m: Ipv4Mask = SLASH_30_CIDR.parse().unwrap();
-    assert_eq!(format!("{:#}", m), SLASH_30_CIDR);
+    assert_eq!(format!("{}", m), SLASH_30_CIDR);
     assert_eq!(m.len(), 30);
     let m: Ipv4Mask = SLASH_12_CIDR.parse().unwrap();
-    assert_eq!(format!("{:#}", m), SLASH_12_CIDR);
+    assert_eq!(format!("{}", m), SLASH_12_CIDR);
     assert_eq!(m.len(), 12);
     let m: Ipv4Mask = SLASH_8_CIDR.parse().unwrap();
-    assert_eq!(format!("{:#}", m), SLASH_8_CIDR);
+    assert_eq!(format!("{}", m), SLASH_8_CIDR);
     assert_eq!(m.len(), 8);
     let m: Ipv4Mask = SLASH_0_CIDR.parse().unwrap();
-    assert_eq!(format!("{:#}", m), SLASH_0_CIDR);
+    assert_eq!(format!("{}", m), SLASH_0_CIDR);
     assert_eq!(m.len(), 0);
 }
 #[test]
 fn parse_v6_mask_strings() {
-    const SLASH_128: &str = "FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF";
-    const SLASH_126: &str = "FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFC";
-    const SLASH_12: &str = "FFF0::";
-    const SLASH_8: &str = "FF00::";
+    const SLASH_128: &str = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff";
+    const SLASH_126: &str = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffc";
+    const SLASH_12: &str = "fff0::";
+    const SLASH_8: &str = "ff00::";
     const SLASH_0: &str = "::";
 
     const SLASH_128_CIDR: &str = "/128";
@@ -144,19 +169,19 @@ fn parse_v6_mask_strings() {
     assert_eq!(m.len(), 0);
 
     let m: Ipv6Mask = SLASH_128_CIDR.parse().unwrap();
-    assert_eq!(format!("{:#}", m), SLASH_128_CIDR);
+    assert_eq!(format!("{:#}", m), SLASH_128);
     assert_eq!(m.len(), 128);
     let m: Ipv6Mask = SLASH_126_CIDR.parse().unwrap();
-    assert_eq!(format!("{:#}", m), SLASH_126_CIDR);
+    assert_eq!(format!("{:#}", m), SLASH_126);
     assert_eq!(m.len(), 126);
     let m: Ipv6Mask = SLASH_12_CIDR.parse().unwrap();
-    assert_eq!(format!("{:#}", m), SLASH_12_CIDR);
+    assert_eq!(format!("{:#}", m), SLASH_12);
     assert_eq!(m.len(), 12);
     let m: Ipv6Mask = SLASH_8_CIDR.parse().unwrap();
-    assert_eq!(format!("{:#}", m), SLASH_8_CIDR);
+    assert_eq!(format!("{:#}", m), SLASH_8);
     assert_eq!(m.len(), 8);
     let m: Ipv6Mask = SLASH_0_CIDR.parse().unwrap();
-    assert_eq!(format!("{:#}", m), SLASH_0_CIDR);
+    assert_eq!(format!("{:#}", m), SLASH_0);
     assert_eq!(m.len(), 0);
 }
 #[test]
@@ -167,13 +192,13 @@ fn parse_masked_ipv4_strings() {
     const TEN_FIVE_32: &str = "10.0.0.5 255.255.255.255";
 
     let net: MaskedIpv4 = TEN_ONE_8.parse().unwrap();
-    assert_eq!(format!("{}", net), "10.0.0.1 255.0.0.0");
+    assert_eq!(format!("{:#}", net), "10.0.0.1 255.0.0.0");
     let net: MaskedIpv4 = TEN_TWO_24.parse().unwrap();
-    assert_eq!(format!("{}", net), "10.0.0.2 255.255.255.0");
+    assert_eq!(format!("{:#}", net), "10.0.0.2 255.255.255.0");
     let net: MaskedIpv4 = TEN_FOUR_12.parse().unwrap();
-    assert_eq!(format!("{:#}", net), "10.0.0.4/12");
+    assert_eq!(format!("{}", net), "10.0.0.4/12");
     let net: MaskedIpv4 = TEN_FIVE_32.parse().unwrap();
-    assert_eq!(format!("{:#}", net), "10.0.0.5/32");
+    assert_eq!(format!("{}", net), "10.0.0.5/32");
 }
 #[test]
 fn parse_masked_ipv6_strings() {
@@ -220,6 +245,7 @@ fn invalid_maskedv4_cidr() {
     assert!(MaskedIpv4::from_cidr_str("192.168.1.1 255.255.255.0").is_none());
     assert!(MaskedIpv4::from_cidr_str("192.168.1.1/33").is_none());
     assert!(MaskedIpv4::from_cidr_str("192.256.1.1/32").is_none());
+    assert!(MaskedIpv4::from_cidr_str("192.168.1.1//32").is_none());
 }
 #[test]
 fn invalid_maskedv6_cidr() {
@@ -237,11 +263,16 @@ fn invalid_maskedv4_network() {
     assert!(MaskedIpv4::from_network_str("192.168.1.1 255.255.255.255 ").is_none());
     assert!(MaskedIpv4::from_network_str("192.168.1.1 255.255.255").is_none());
 }
-#[test]
-fn build_maskedip() {
-    const S: &str = "192.168.1.1/25";
-    assert_eq!(
-        "192.168.1.1/25",
-        S.parse::<MaskedIp>().unwrap().to_cidr_string()
-    );
-}
+// #[test]
+// fn build_maskedip() {
+//     const S: &str = "192.168.1.1/25";
+//     assert_eq!(
+//         "192.168.1.1/25",
+//         S.parse::<MaskedIp>().unwrap().to_cidr_string()
+//     );
+//     const S2: &str = "2601:4F:ABCD:1::1/126";
+//     assert_eq!(
+//         "2601:4f:abcd:1::1/126",
+//         S2.parse::<MaskedIp>().unwrap().to_cidr_string()
+//     );
+// }

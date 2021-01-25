@@ -1,6 +1,6 @@
 [package]
 name = "ipstuff"
-version = "0.1.5"
+version = "0.2.0"
 authors = ["Tyler Ruckinger"]
 edition = "2018"
 
@@ -18,3 +18,12 @@ status = "actively-developed"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+serde = { version = "1.0.119", features = ["derive"], optional = true }
+
+[dev-dependencies]
+# For human readable serde testing
+serde_yaml = "0.8.15"
+# For non human readable serde testing
+bincode = "1.3.1"
+
+[features]

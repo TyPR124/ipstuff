@@ -4,7 +4,7 @@ Basic IP utlities. This is in active development and I will add things as I need
 
 This crate commits to both efficiency and safety. This crate includes `#![forbid(unsafe_code)]` and may use platform-specific implementations if they are proven more efficient.
 
-This crate will abide by Rust's semver standards to the best of my ability for versions published to crates.io. The Github repository, on the other hand, may be updated with breaking changes at any time.
+This crate will abide by Rust's semver standards to the best of my ability for versions published to crates.io. The Github repository, on the other hand, may be updated with breaking changes at any time. blah blah. mo
 
 ## Features
 
