@@ -117,21 +117,6 @@ impl Ipv4Mask {
     }
     /// Returns the length of the mask. That is, the number of 1 bits in this
     /// mask.
-    ///
-    /// # Optimized
-    ///
-    /// With `target-feature=+popcnt`
-    ///
-    /// ```asm
-    /// popcnt  eax, edi
-    /// ret
-    /// ```
-    ///
-    /// Otherwise
-    ///
-    /// ```asm
-    ///
-    /// ```
     pub const fn len(self) -> u8 {
         let x = self.as_u32();
         if cfg!(target_feature = "popcnt") {

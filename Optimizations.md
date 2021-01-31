@@ -14,6 +14,9 @@ Some things to keep in mind when optmizing:
 
 ## Table of Contents
 
+Items will be checked off only when I feel there is little to no room for further
+optimizations.
+
 * [Template](#template)
 * Ipv4Mask
   * [ ] [`new`](#ipv4masknew)
