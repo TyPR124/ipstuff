@@ -81,9 +81,9 @@ optimized without this feautre enabled.
 ### With `bmi2`
 
 ```x86asm
+cmp     dil, 31
 mov     ecx, -1
 shrx    eax, ecx, edi
-cmp     dil, 31
 not     eax
 bswap   eax
 cmova   eax, ecx
@@ -94,9 +94,9 @@ ret
 
 ```x86asm
 mov     ecx, edi
+mov     edx, -1
 mov     eax, -1
 shr     eax, cl
-mov     edx, -1
 cmp     cl, 31
 not     eax
 bswap   eax

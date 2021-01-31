@@ -64,15 +64,13 @@ impl Ipv4Mask {
         Self::new_saturating(len)
     }
     pub const fn new_saturating(len: u8) -> Self {
-        let mask = match u32::MAX.checked_shr(len as u32) {
-            Some(x) => !x,
-            None => {
-                return Self {
-                    mask: [255, 255, 255, 255],
-                }
-            }
-        }
-        .to_be_bytes();
+        let full = len >= 32;
+        let mask = !u32::MAX.wrapping_shr(len as u32);
+        let mask = if full {
+            u32::MAX.to_ne_bytes()
+        } else {
+            mask.to_be_bytes()
+        };
         Self { mask }
     }
     /// Constructs a subnet mask from the provided bytes, if they represent a
