@@ -1,11 +1,8 @@
-use crate::IpBitwiseExt;
+use crate::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
-use std::str::FromStr;
-
-use std::ops::Not;
-
-use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
+use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
+use core::ops::Not;
+use core::str::FromStr;
 
 /// A 4-byte type representing a subnet mask in big-endian byte-order. This type can only be a valid subnet mask.
 #[repr(align(4))]
@@ -72,7 +69,7 @@ impl Ipv4Mask {
             (!x).leading_zeros() as u8 // not; bsr;
         };
         let zeros = x.trailing_zeros() as u8; // tzcnt / bsf;
-                                              // add; test; sete;
+        // add; test; sete;
         if ones + zeros == 32 {
             let mask = x.to_be_bytes();
             Some(Self { mask })
@@ -96,6 +93,12 @@ impl Ipv4Mask {
         #[cfg(not(target_feature = "popcnt"))]
         let len = (!x).leading_zeros() as u8;
         len
+    }
+    pub const fn to_bits(self) -> u32 {
+        u32::from_be_bytes(self.mask)
+    }
+    pub fn from_bits(bits: u32) -> Option<Self> {
+        Self::from_bytes(bits.to_be_bytes())
     }
 }
 #[allow(clippy::len_without_is_empty)]
@@ -165,6 +168,9 @@ impl Ipv6Mask {
         #[cfg(not(target_feature = "popcnt"))]
         let len = (!x).leading_zeros() as u8;
         len
+    }
+    pub fn to_bits(self) -> u128 {
+        u128::from_be_bytes(self.octets())
     }
 }
 
@@ -307,17 +313,17 @@ impl MaskedIpv4 {
         let mask = parts.next()?.parse().ok()?;
         Some(Self::new(ip, mask))
     }
-    /// Returns a String with the IP and mask in CIDR format. Shortcut for `format!("{:#}", self)`
-    pub fn to_cidr_string(&self) -> String {
-        format!("{:#}", self)
-    }
-    /// Returns a String with the IP and mask in dotted decimal format. Shortcut for `format!("{}", self)`
-    pub fn to_network_string(&self) -> String {
-        format!("{}", self)
-    }
+    // /// Returns a String with the IP and mask in CIDR format. Shortcut for `format!("{:#}", self)`
+    // pub fn to_cidr_string(&self) -> String {
+    //     format!("{:#}", self)
+    // }
+    // /// Returns a String with the IP and mask in dotted decimal format. Shortcut for `format!("{}", self)`
+    // pub fn to_network_string(&self) -> String {
+    //     format!("{}", self)
+    // }
     /// Returns the network adderss by setting all host bits to 0.
     pub fn network_address(&self) -> Ipv4Addr {
-        self.ip.bitand(self.mask)
+        self.ip & self.mask
     }
     /// Constructs a new MaskedIpv4 using the network address and mask of this MaskedIpv4.
     pub fn network(&self) -> MaskedIpv4 {
@@ -329,7 +335,7 @@ impl MaskedIpv4 {
     }
     /// Returns the broadcast address by setting all host bits to 1.
     pub fn broadcast_address(&self) -> Ipv4Addr {
-        self.ip.bitor(!self.mask)
+        self.ip | !self.mask
     }
     /// Returns true if all host bits in the IP are 1. Always returns false if the mask length is 31 or 32.
     pub fn is_broadcast_address(&self) -> bool {
@@ -400,7 +406,7 @@ impl MaskedIpv4 {
     }
     /// Returns true if this network contains the provided IP address, even if the provided IP is the network or broadcast address.
     pub fn contains(&self, ip: Ipv4Addr) -> bool {
-        self.ip.bitand(self.mask) == ip.bitand(self.mask)
+        self.ip & self.mask == ip & self.mask
     }
 }
 
@@ -429,16 +435,16 @@ impl MaskedIpv6 {
             Some(Self::cidr(ip, mask_len))
         }
     }
-    /// Returns a String with the IP and mask in CIDR format. Shortcut for `format!("{}", self)`
-    pub fn to_cidr_str(&self) -> String {
-        format!("{}", self)
-    }
+    // /// Returns a String with the IP and mask in CIDR format. Shortcut for `format!("{}", self)`
+    // pub fn to_cidr_str(&self) -> String {
+    //     format!("{}", self)
+    // }
     /// Returns the "network" address by setting all host bits to 0.
     ///
     /// Note: Ipv6 does not technically have a "network" address, however this method can still
     /// be useful to determine the base address of a network.
     pub fn network_address(&self) -> Ipv6Addr {
-        self.ip.bitand(self.mask)
+        self.ip & self.mask
     }
     /// Constructs a new MaskedIpv6 using the network address and mask of this MaskedIpv6.
     pub fn network(&self) -> MaskedIpv6 {
@@ -482,7 +488,7 @@ impl MaskedIpv6 {
     }
     /// Returns true if this network contains the provided IP address.
     pub fn contains(&self, ip: Ipv6Addr) -> bool {
-        self.ip.bitand(self.mask) == ip.bitand(self.mask)
+        self.ip & self.mask == ip & self.mask
     }
 }
 
@@ -497,9 +503,9 @@ impl MaskedIp {
             _ => None,
         }
     }
-    pub fn to_cidr_string(&self) -> String {
-        format!("{:#}", self)
-    }
+    // pub fn to_cidr_string(&self) -> String {
+    //     format!("{:#}", self)
+    // }
     pub fn network_address(&self) -> IpAddr {
         match self {
             Self::V4(m) => IpAddr::V4(m.network_address()),

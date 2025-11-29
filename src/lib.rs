@@ -2,13 +2,14 @@
 //!
 //! Various utilities for working with IP addresses and subnet masks.
 //!
+#![no_std]
 #![forbid(unsafe_code)]
-#![warn(missing_docs)]
+
+mod addrs;
+pub use addrs::*;
 
 mod masked;
 pub use masked::*;
-mod ops;
-pub use ops::*;
 
 #[cfg(test)]
 mod tests;
